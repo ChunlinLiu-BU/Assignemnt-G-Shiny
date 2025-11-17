@@ -1,0 +1,109 @@
+---
+title: "MA 615 shiny project clean data"
+author: "Chunlin Liu"
+date: "2025-11-17"
+output: pdf_document
+---
+
+```{r}
+
+
+library(foreign)
+library(haven)
+library(dplyr)
+
+Cigarette_use_pre <- read_xpt("/Users/liuchunlin/Downloads/P_SMQ.xpt.txt")
+Cigarette_use_post <- read_xpt("/Users/liuchunlin/Downloads/SMQ_L.xpt.txt")
+
+Demographic_pre <- read_xpt("/Users/liuchunlin/Downloads/P_DEMO.xpt.txt")
+Demographic_post <- read_xpt("/Users/liuchunlin/Downloads/DEMO_L.xpt.txt")
+
+
+merged_pre <- Cigarette_use_pre %>%
+  left_join(Demographic_pre, by = "SEQN")
+merged_post <- Cigarette_use_post %>%
+  left_join(Demographic_post, by = "SEQN")
+
+
+merged_pre <- merged_pre %>%
+  mutate(period = "Pre-COVID")
+
+merged_post <- merged_post %>%
+  mutate(period = "Post-COVID")
+
+nhanes_all <- bind_rows(merged_pre, merged_post)
+
+
+
+```
+
+Data cleaning
+
+```{r}
+
+keep_vars <- c("SEQN","RIDAGEYR","RIAGENDR","RIDRETH3","INDFMINC","SMQ020","SMQ040")
+
+merged_pre_clean <- merged_pre %>%
+  select(any_of(keep_vars)) %>%
+  mutate(period = "Pre-COVID")
+
+merged_post_clean <- merged_post %>%
+  select(any_of(keep_vars)) %>%
+  mutate(period = "Post-COVID")
+
+
+nhanes_all_clean <- bind_rows(merged_pre_clean, merged_post_clean)
+
+nhanes_all_clean_na <- nhanes_all_clean %>%
+  filter(!(is.na(SMQ020) & is.na(SMQ040)))
+
+
+nhanes_all_clean_na <- nhanes_all_clean_na %>%
+  mutate(
+    ever_smoker = case_when(
+      SMQ020 == 1 ~ 1,
+      SMQ040 == 1 ~ 1,
+      SMQ040 == 2 ~ 0,
+      TRUE ~ NA 
+    )
+  )
+
+
+nhanes_all_clean_na <- nhanes_all_clean_na %>%
+  mutate(
+    current_smoker = case_when(
+      SMQ040 == 1 ~ 1,
+      SMQ040 == 2 ~ 1,
+      SMQ040 == 3 ~ 0,
+    )
+  )
+
+nhanes_all_clean_na <- nhanes_all_clean_na %>%
+  mutate(
+    illegal_smoker = case_when(
+      current_smoker == 1 & RIDAGEYR < 21 ~ 1,
+      current_smoker == 0 ~ 0,
+    )
+  )
+
+
+nhanes_all_clean_na <- nhanes_all_clean_na %>%
+  mutate(age_group = cut(
+    RIDAGEYR,
+    breaks = c(0, 17, 20, 29, 44, 59, 120),
+    labels = c("0-17","18-20","21-29","30-44","45-59","60+"),
+    right = TRUE
+  ))
+
+write.csv(nhanes_all_clean_na, "nhanes_final.csv", row.names = FALSE)
+
+```
+
+
+
+
+
+
+
+
+
