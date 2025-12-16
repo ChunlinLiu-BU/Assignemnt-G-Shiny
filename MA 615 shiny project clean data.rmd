@@ -12,11 +12,11 @@ library(foreign)
 library(haven)
 library(dplyr)
 
-Cigarette_use_pre <- read_xpt("/Users/liuchunlin/Downloads/P_SMQ.xpt.txt")
-Cigarette_use_post <- read_xpt("/Users/liuchunlin/Downloads/SMQ_L.xpt.txt")
+Cigarette_use_pre <- read_xpt("P_SMQ.xpt.txt")
+Cigarette_use_post <- read_xpt("SMQ_L.xpt.txt")
 
-Demographic_pre <- read_xpt("/Users/liuchunlin/Downloads/P_DEMO.xpt.txt")
-Demographic_post <- read_xpt("/Users/liuchunlin/Downloads/DEMO_L.xpt.txt")
+Demographic_pre <- read_xpt("P_DEMO.xpt.txt")
+Demographic_post <- read_xpt("DEMO_L.xpt.txt")
 
 
 merged_pre <- Cigarette_use_pre %>%
